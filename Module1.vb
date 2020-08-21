@@ -1,11 +1,12 @@
 ﻿Imports System.IO
+Imports System.Text
 Imports Python.Runtime
 
 Module Module1
 
     Sub Main()
 
-        Dim ppath As String = "C:\miniconda3"
+        Dim ppath As String = "C:\reaktoro_python"
         Dim append As String = ppath + ";" + Path.Combine(ppath, "Library", "bin") + ";"
 
         Dim p As String = append + Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine)
@@ -25,7 +26,7 @@ Module Module1
 
             '' Step 3: Define the chemical system
             Dim editor = reaktoro.ChemicalEditor(db)
-            editor.addAqueousPhaseWithElements("H O Na Cl C")
+            editor.addAqueousPhase("H2O(l) H+ OH- HCO3- CO2(aq) NaCl(aq) Na+ Cl-")
             editor.addGaseousPhase("CO2(g)")
 
             '' Step 4: Construct the chemical system
@@ -37,13 +38,40 @@ Module Module1
             problem.setPressure(100, "bar")
             problem.add("H2O", 1.0, "kg")
             problem.add("NaCl", 1.0, "mol")
+            problem.add("Na+", 1.0, "mol")
             problem.add("CO2", 10.0, "mol")
 
             ' Step 6: Calculate the chemical equilibrium state
             Dim state = reaktoro.equilibrate(problem)
 
-            ' Step 7: Output the calculated chemical state To a file
-            state.output("result.txt")
+            Dim properties = state.properties
+
+            Dim species = mySystem.species()
+
+            For Each item In species
+                Console.WriteLine(item.name)
+            Next
+
+            Dim phases = mySystem.phases()
+
+            Console.WriteLine(state.phaseAmount("Aqueous"))
+            Console.WriteLine(state.phaseAmount("Gaseous"))
+
+            For Each item In phases
+                Console.WriteLine(item.name)
+            Next
+
+            Dim amounts = state.speciesAmounts()
+
+            For Each item In amounts
+                Console.WriteLine(item)
+            Next
+
+            Dim ac = properties.lnActivityCoefficients().val
+
+            For Each item In ac
+                Console.WriteLine(item)
+            Next
 
         End Using
 
